@@ -1,0 +1,47 @@
+body{
+	 font-size: 20px;
+	 text-align: center;
+	 font: Calibri;
+	 background-color: rgba(44, 159, 255, 0.9);
+ }
+ 
+ img{
+	 max-width: 100%;
+	 height:auto;
+	 width: auto;
+ }
+ 
+ #two{
+	 display: table;
+	 padding: 20px 0px 20px 0px;
+	 background: rgba(44, 255, 155, 0.3);
+	 width: 50%;
+	 float: left;
+	 height: 650px;
+ } 
+ 
+ #three{
+	 display: table;
+	 padding: 20px 0px 20px 0px;
+	 background: rgba(0, 108, 0, 1);
+	 width: 50%;
+	 float: left;
+	 height: 650px;
+ } 
+ 
+ #four{
+	 display: table;
+	 padding: 20px 0px 20px 0px;
+	 background: rgba(168, 0, 0, 1);
+ } 
+ 
+ #five{
+	 padding: 20px 0px 20px 0px;
+	 background: rgba(255, 102, 5, 0.3);
+	 font-size: 5vw;
+ }
+ 
+ p {
+  display: table-cell;
+  vertical-align: middle;
+}
