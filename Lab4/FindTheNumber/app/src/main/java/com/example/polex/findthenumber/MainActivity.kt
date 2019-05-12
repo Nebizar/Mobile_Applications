@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
         //var init
         var number = (1..20).shuffled().first()
         var counter = 1
-        var bestScore = 9999999
+        var fullScore = 0
 
         //Toaster
         val duration = Toast.LENGTH_SHORT
@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
 
         //Dialog
         val dialog = AlertDialog.Builder(this)
-        dialog.setTitle("You win!")
+        dialog.setTitle("The End!")
         dialog.setOnCancelListener { toast.show() }
 
         //Internal Memory File
@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if(stringBuilder.isNotEmpty()) {
-            bestScore = stringBuilder.toString().toInt()
+            fullScore = stringBuilder.toString().toInt()
             textView2.text = ("Best Score: " + stringBuilder.toString() + " moves").toString()
         }
         else {
@@ -53,25 +53,31 @@ class MainActivity : AppCompatActivity() {
 
         //check button
         button.setOnClickListener {
-            if(editText.text.toString().toInt() == number) {
+            if (counter > 10){
+                dialog.setMessage("You lose ! You needed more than 10 tries to guess the number !")
+                dialog.show()
+                number = (0..20).shuffled().first()
+                counter = 0
+            }
+            else if(editText.text.toString().toInt() == number) {
                 dialog.setMessage("Congratulations ! You needed " + counter.toString() + " tries to guess the number")
                 dialog.show()
 
                 number = (0..20).shuffled().first()
 
-                if(bestScore > counter) {
-                    bestScore = counter
 
-                    val fileOutputStream: FileOutputStream
-                    try {
-                        fileOutputStream = openFileOutput(fileName, MODE_PRIVATE)
-                        fileOutputStream.write(bestScore.toString().toByteArray())
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+                fullScore += calculatePoints(counter)
 
-                    textView2.text = "Best Score: " + bestScore.toString() + " moves"
+                val fileOutputStream: FileOutputStream
+                try {
+                    fileOutputStream = openFileOutput(fileName, MODE_PRIVATE)
+                    fileOutputStream.write(fullScore.toString().toByteArray())
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
+
+                textView2.text = "Application Score: " + fullScore.toString() + " moves"
+
                 counter = 0
             }
             else {
@@ -89,9 +95,11 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun calculatePoints(moves: int):int{
+    fun calculatePoints(moves: Int):Int{
         if (moves == 1) return 5
-        if (moves >1 && moves <5) return 3
+        if (moves in 2..4) return 3
+        if (moves in 5..6) return 2
+        if (moves in 7..10) return 1
         return -1
     }
 }
