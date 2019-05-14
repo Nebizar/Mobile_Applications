@@ -1,5 +1,6 @@
 package com.example.polex.findthenumber
 
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
@@ -75,8 +76,9 @@ class MainActivity : AppCompatActivity() {
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
+                val check = EndpointConnection.SendNameMessage(this).execute(fullScore.toString())
 
-                textView2.text = "Application Score: " + fullScore.toString() + " moves"
+                textView2.text = "Application Score: " + fullScore.toString() + " moves" +"|TEST|" +check
 
                 counter = 0
             }
@@ -90,6 +92,12 @@ class MainActivity : AppCompatActivity() {
             number = (0..20).shuffled().first()
             counter = 0
             toast.show()
+        }
+
+        //best scores button
+        button3.setOnClickListener{
+            val intent = Intent(this, MessageActivity::class.java)
+            startActivity(intent)
         }
 
 
