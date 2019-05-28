@@ -31,10 +31,11 @@ class MainActivity : AppCompatActivity() {
         //Internal Memory File
         val fileName = "BS.txt"
         val file = File(filesDir, fileName)
-        file.createNewFile()
+        //file.createNewFile()
 
         //Read best score from Internal Memory
-        var fileInputStream: FileInputStream? = null
+        var user = Users()
+        /*var fileInputStream: FileInputStream? = null
         fileInputStream = openFileInput(fileName)
         var inputStreamReader: InputStreamReader = InputStreamReader(fileInputStream)
         val bufferedReader: BufferedReader = BufferedReader(inputStreamReader)
@@ -50,7 +51,15 @@ class MainActivity : AppCompatActivity() {
         }
         else {
             textView2.text = ("No scores yet - be first to play!").toString()
-        }
+        }*/
+        var input = file.bufferedReader().readLines()
+        var data = input[0].split(",")
+        user.id = data[0].toInt()
+        user.username = data[1]
+        user.password = data[2]
+        user.score = data[3].toInt()
+        textView2.text = ("Current score: " + user.score.toString())
+
 
         //check button
         button.setOnClickListener {
@@ -67,18 +76,22 @@ class MainActivity : AppCompatActivity() {
                 number = (0..20).shuffled().first()
 
 
-                fullScore += calculatePoints(counter)
+                user.score += calculatePoints(counter)
 
                 val fileOutputStream: FileOutputStream
                 try {
                     fileOutputStream = openFileOutput(fileName, MODE_PRIVATE)
-                    fileOutputStream.write(fullScore.toString().toByteArray())
+                    fileOutputStream.write(user.id.toString().toByteArray())
+                    fileOutputStream.write(user.username.toByteArray())
+                    fileOutputStream.write(user.password.toByteArray())
+                    fileOutputStream.write(user.score.toString().toByteArray())
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
+
                 val check = EndpointConnection.SendNameMessage(this).execute(fullScore.toString())
 
-                textView2.text = "Application Score: " + fullScore.toString() + " moves" +"|TEST|" +check
+                textView2.text = "Application Score: " + user.score.toString() + " moves"
 
                 counter = 0
             }

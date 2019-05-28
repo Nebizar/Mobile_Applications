@@ -3,6 +3,7 @@ package com.example.polex.findthenumber
 import android.os.AsyncTask
 import android.view.View
 import kotlinx.android.synthetic.main.activity_message.*
+import java.net.HttpURLConnection
 import java.net.URL
 
 class EndpointConnection {
@@ -14,8 +15,15 @@ class EndpointConnection {
         }
 
         override fun doInBackground(vararg params: String?): String {
+            var result: String
             val url = "http://hufiecgniezno.pl/br/record.php?f=get"
-            val result = URL(url).readText()
+            val connection =  URL(url).openConnection() as HttpURLConnection
+            try {
+                connection.connect()
+                result = connection.inputStream.use{it.reader().use{reader -> reader.readText()} }
+            } finally {
+                connection.disconnect()
+            }
             return result
         }
 
@@ -28,8 +36,15 @@ class EndpointConnection {
 
     class SendNameMessage(private var activity: MainActivity?): AsyncTask<String,String,String>(){
         override fun doInBackground(vararg params: String?): String {
+            var result: String
             val url = "http://hufiecgniezno.pl/br/record.php?f=add&id=132302&r="+params[0]
-            val result = URL(url).readText()
+            val connection =  URL(url).openConnection() as HttpURLConnection
+            try {
+                connection.connect()
+                result = connection.inputStream.use{it.reader().use{reader -> reader.readText()} }
+            } finally {
+                connection.disconnect()
+            }
             return result
         }
     }

@@ -13,7 +13,6 @@ class MessageActivity : AppCompatActivity() {
 
         EndpointConnection.GetNameMessage(this).execute()
 
-
         button4.setOnClickListener{
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)

@@ -7,6 +7,8 @@ import android.os.Handler
 import android.view.View
 import kotlinx.android.synthetic.main.activity_fullscreen.*
 import java.lang.Thread.sleep
+import java.io.File
+
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -62,11 +64,23 @@ class FullscreenActivity : AppCompatActivity() {
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
 
+        var whereTo = 0
+        val f = File(filesDir, "BS.txt")
+        if (f.exists()) {
+            whereTo = 1
+        }
+
         val thread = Thread(){
             run{
                 sleep(2000)
-                val intent = Intent(this, MainActivity::class.java)
-                startActivity(intent)
+                if(whereTo!=0) {
+                    val intent = Intent(this, MainActivity::class.java)
+                    startActivity(intent)
+                }
+                else{
+                    val intent = Intent(this, LoginActivity::class.java)
+                    startActivity(intent)
+                }
             }
         }
         thread.start()
