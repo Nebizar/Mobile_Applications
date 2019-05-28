@@ -79,6 +79,20 @@ class DatabaseHandler(context: Context) :
 
     }
 
+    fun updateUser(user: Users) {
+        val db = this.writableDatabase
+        var values = ContentValues()
+        values.put(ID, user.id)
+        values.put(FIRST_NAME, user.username)
+        values.put(LAST_NAME, user.password)
+        values.put(SCORE, user.score)
+
+        val retVal = db.update(TABLE_NAME, values, "id = " + user.id.toString(), null)
+
+        db.close()
+
+    }
+
     companion object {
         private val DB_NAME = "UsersDB"
         private val DB_VERSIOM = 1;

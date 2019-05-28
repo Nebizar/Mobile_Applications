@@ -10,12 +10,14 @@ import java.io.*
 
 class MainActivity : AppCompatActivity() {
 
+    var dbHandler: DatabaseHandler? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         //var init
-        var number = (1..20).shuffled().first()
+        var number = 1//(1..20).shuffled().first()
         var counter = 1
         var fullScore = 0
 
@@ -35,23 +37,7 @@ class MainActivity : AppCompatActivity() {
 
         //Read best score from Internal Memory
         var user = Users()
-        /*var fileInputStream: FileInputStream? = null
-        fileInputStream = openFileInput(fileName)
-        var inputStreamReader: InputStreamReader = InputStreamReader(fileInputStream)
-        val bufferedReader: BufferedReader = BufferedReader(inputStreamReader)
-        val stringBuilder: StringBuilder = StringBuilder()
-        var text: String? = null
-        while ({ text = bufferedReader.readLine(); text }() != null) {
-            stringBuilder.append(text)
-        }
 
-        if(stringBuilder.isNotEmpty()) {
-            fullScore = stringBuilder.toString().toInt()
-            textView2.text = ("Best Score: " + stringBuilder.toString() + " moves").toString()
-        }
-        else {
-            textView2.text = ("No scores yet - be first to play!").toString()
-        }*/
         var input = file.bufferedReader().readLines()
         var data = input[0].split(",")
         user.id = data[0].toInt()
@@ -81,17 +67,17 @@ class MainActivity : AppCompatActivity() {
                 val fileOutputStream: FileOutputStream
                 try {
                     fileOutputStream = openFileOutput(fileName, MODE_PRIVATE)
-                    fileOutputStream.write(user.id.toString().toByteArray())
-                    fileOutputStream.write(user.username.toByteArray())
-                    fileOutputStream.write(user.password.toByteArray())
-                    fileOutputStream.write(user.score.toString().toByteArray())
+                    fileOutputStream.write((user.id.toString()+",").toByteArray())
+                    fileOutputStream.write((user.username+",").toByteArray())
+                    fileOutputStream.write((user.password+",").toByteArray())
+                    fileOutputStream.write((user.score.toString()+",").toByteArray())
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
 
-                val check = EndpointConnection.SendNameMessage(this).execute(fullScore.toString())
+                val check = EndpointConnection.SendNameMessage(this).execute(user.username, user.score.toString())
 
-                textView2.text = "Application Score: " + user.score.toString() + " moves"
+                textView2.text = "Your Score: " + user.score.toString()
 
                 counter = 0
             }
@@ -113,7 +99,13 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-
+        button7.setOnClickListener{
+            dbHandler = DatabaseHandler(this)
+            dbHandler!!.updateUser(user)
+            file.delete()
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     fun calculatePoints(moves: Int):Int{

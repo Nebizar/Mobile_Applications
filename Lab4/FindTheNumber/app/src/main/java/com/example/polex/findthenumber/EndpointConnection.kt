@@ -37,7 +37,7 @@ class EndpointConnection {
     class SendNameMessage(private var activity: MainActivity?): AsyncTask<String,String,String>(){
         override fun doInBackground(vararg params: String?): String {
             var result: String
-            val url = "http://hufiecgniezno.pl/br/record.php?f=add&id=132302&r="+params[0]
+            val url = "http://hufiecgniezno.pl/br/record.php?f=add&id="+params[0]+"&r="+params[1]
             val connection =  URL(url).openConnection() as HttpURLConnection
             try {
                 connection.connect()

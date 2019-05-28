@@ -67,7 +67,10 @@ class FullscreenActivity : AppCompatActivity() {
         var whereTo = 0
         val f = File(filesDir, "BS.txt")
         if (f.exists()) {
-            whereTo = 1
+            var input = f.bufferedReader().readLines()
+            if(input.isNotEmpty()){
+                whereTo = 1
+            }
         }
 
         val thread = Thread(){
