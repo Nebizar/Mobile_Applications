@@ -30,7 +30,24 @@ class EndpointConnection {
         override fun onPostExecute(result: String?) {
             super.onPostExecute(result)
             activity?.progressBar?.visibility = View.INVISIBLE
-            activity?.textView3?.text = result
+            var rankingView = ""
+
+            val separatedEntries = result!!.split(",")
+            var counter = 0
+            var jumper = 1
+
+            while(counter < 10){
+                rankingView += (counter+1).toString() +". "+ separatedEntries.get(jumper) + "\t" + separatedEntries.get(jumper + 1) + "\n"
+
+                jumper += 3
+                counter++
+            }
+
+            //Get rid of unnecessary characters
+            rankingView = rankingView.replace("]", "")
+            rankingView = rankingView.replace("\"", "")
+
+            activity?.textView3?.text = rankingView
         }
     }
 
