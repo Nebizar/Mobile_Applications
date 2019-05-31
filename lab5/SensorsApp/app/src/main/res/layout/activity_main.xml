@@ -37,5 +37,22 @@
             android:layout_marginLeft="15dp"
             android:layout_toRightOf="@+id/longitude"
             android:textSize="15sp"/>
+    <TextView
+            android:id="@+id/light"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:text="Light:"
+            android:layout_marginTop="48dp"
+            android:textSize="15sp" />
+    <TextView
+            android:id="@+id/txt_light"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/light"
+            android:layout_marginLeft="15dp"
+            android:layout_toRightOf="@+id/light"
+            android:textSize="15sp"/>
 
 </RelativeLayout>

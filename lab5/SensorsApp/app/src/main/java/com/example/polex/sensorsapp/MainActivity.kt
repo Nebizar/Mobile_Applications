@@ -1,153 +1,167 @@
 package com.example.polex.sensorsapp
 
-import android.Manifest
+import android.annotation.SuppressLint
+import android.app.*
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationManager
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.provider.Settings
-import android.support.multidex.MultiDex
+import android.os.Looper
+import android.support.annotation.RequiresApi
 import android.support.v4.app.ActivityCompat
-import android.support.v7.app.AlertDialog
-import android.util.Log
+import android.widget.RemoteViews
 import android.widget.Toast
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.api.GoogleApiClient
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.tasks.OnSuccessListener
+import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.jar.Manifest
+
+class MainActivity : AppCompatActivity(), SensorEventListener {
 
 
-class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
+    lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    lateinit var locationRequest: LocationRequest
+    lateinit var locationCallback: LocationCallback
 
-    private val TAG = "MainActivity"
-    private lateinit var mGoogleApiClient: GoogleApiClient
-    private var mLocationManager: LocationManager? = null
-    lateinit var mLocation: Location
-    private var mLocationRequest: LocationRequest? = null
-    private val listener: com.google.android.gms.location.LocationListener? = null
-    private val UPDATE_INTERVAL = (2 * 1000).toLong()  /* 10 secs */
-    private val FASTEST_INTERVAL: Long = 2000 /* 2 sec */
+    lateinit var sensor : Sensor
+    lateinit var sensorManager : SensorManager
 
-    lateinit var locationManager: LocationManager
+    val REQUEST_CODE = 1000;
 
-
-
-    override fun onStart() {
-        super.onStart();
-        if (mGoogleApiClient != null) {
-            mGoogleApiClient.connect();
-        }
-    }
-
-    override fun onStop() {
-        super.onStop();
-        if (mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.disconnect();
-        }
-    }
-
-    override fun onConnectionSuspended(p0: Int) {
-
-        Log.i(TAG, "Connection Suspended");
-        mGoogleApiClient.connect();
-    }
-
-    override fun onConnectionFailed(connectionResult: ConnectionResult) {
-        Log.i(TAG, "Connection failed. Error: " + connectionResult.getErrorCode());
-    }
-
-    override fun onLocationChanged(location: Location) {
+    lateinit var notificationManager : NotificationManager
+    lateinit var notificationChannel : NotificationChannel
+    lateinit var builder : Notification.Builder
+    private val channelId = "com.example.sensors"
+    private val description = "Sensors app is working"
 
 
-        var msg = "Updated Location: Latitude " + location.longitude.toString() + location.longitude;
-        txt_latitude.setText(""+location.latitude);
-        txt_longitude.setText(""+location.longitude);
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-
-
-    }
-
-    override fun onConnected(p0: Bundle?) {
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            return;
-        }
-
-
-        startLocationUpdates();
-
-        var fusedLocationProviderClient :
-                FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-        fusedLocationProviderClient .getLastLocation()
-            .addOnSuccessListener(this, OnSuccessListener<Location> { location ->
-                if (location != null) {
-                    mLocation = location;
-                    txt_latitude.setText("" + mLocation.latitude)
-                    txt_longitude.setText("" + mLocation.longitude)
-                }
-            })
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        MultiDex.install(this)
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.ACCESS_FINE_LOCATION)){
+            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_CODE)
+        } else {
+            buildLocationRequest()
+            buildLocationCallBack()
 
-        mGoogleApiClient = GoogleApiClient.Builder(this)
-            .addConnectionCallbacks(this)
-            .addOnConnectionFailedListener(this)
-            .addApi(LocationServices.API)
-            .build()
+            fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+            if(ActivityCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+                ActivityCompat.requestPermissions(this@MainActivity, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_CODE)
+                return
+            }
 
-        mLocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
-        checkLocation()
-    }
-
-    private fun checkLocation(): Boolean {
-        if(!isLocationEnabled())
-            showAlert();
-        return isLocationEnabled();
-    }
-
-    private fun isLocationEnabled(): Boolean {
-        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-    }
-
-    private fun showAlert() {
-        val dialog = AlertDialog.Builder(this)
-        dialog.setTitle("Enable Location")
-            .setMessage("Your Locations Settings is set to 'Off'.\nPlease Enable Location to " + "use this app")
-            .setPositiveButton("Location Settings", DialogInterface.OnClickListener { paramDialogInterface, paramInt ->
-                val myIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                startActivity(myIntent)
-            })
-            .setNegativeButton("Cancel", DialogInterface.OnClickListener { paramDialogInterface, paramInt -> })
-        dialog.show()
-    }
-
-    protected fun startLocationUpdates() {
-
-        // Create the location request
-        mLocationRequest = LocationRequest.create()
-            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-            .setInterval(UPDATE_INTERVAL)
-            .setFastestInterval(FASTEST_INTERVAL);
-        // Request location updates
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
         }
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient,
-            mLocationRequest, this);
+
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        sensor = sensorManager!!.getDefaultSensor(Sensor.TYPE_LIGHT)
+
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+    }
+
+    private fun buildLocationCallBack() {
+        locationCallback = object :LocationCallback() {
+
+            override fun onLocationResult(p0: LocationResult?) {
+                val location = p0!!.locations.get(p0!!.locations.size-1)
+                txt_latitude.text = location.latitude.toString()
+                txt_longitude.text = location.longitude.toString()
+            }
+        }
+    }
+
+    @SuppressLint("RestrictedApi")
+    private fun buildLocationRequest() {
+        locationRequest = LocationRequest()
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        locationRequest.interval = 5000
+        locationRequest.fastestInterval = 3000
+        locationRequest.smallestDisplacement = 10f
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            REQUEST_CODE -> {
+                if (grantResults.size > 0){
+                    if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                        Toast.makeText(this@MainActivity, "Permission granted", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this@MainActivity, "Permission denied", Toast.LENGTH_SHORT).show()
+
+                    }
+
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        sensorManager.registerListener(this@MainActivity, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        sensorManager!!.unregisterListener(this)
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+    }
+
+    override fun onSensorChanged(event: SensorEvent) {
+        val light = event.values[0]
+        txt_light.text = light.toString()
+
+    }
+
+    fun showNotification() {
+        val intent = Intent(this,LauncherActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT)
+
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+
+            notificationChannel = NotificationChannel(channelId, description, NotificationManager.IMPORTANCE_HIGH)
+            notificationChannel.enableLights(true)
+            notificationChannel.lightColor = Color.GREEN
+            notificationChannel.enableVibration(false)
+            notificationManager.createNotificationChannel(notificationChannel)
+
+            builder = Notification.Builder(this, channelId)
+                .setContentTitle("Sensors app")
+                .setContentText("Is working")
+                .setSmallIcon(R.mipmap.ic_launcher_round)
+                .setLargeIcon(BitmapFactory.decodeResource(this.resources,R.mipmap.ic_launcher))
+                .setContentIntent(pendingIntent)
+        } else {
+            builder = Notification.Builder(this)
+                .setContentTitle("Sensors app")
+                .setContentText("Is working")
+                .setSmallIcon(R.mipmap.ic_launcher_round)
+                .setLargeIcon(BitmapFactory.decodeResource(this.resources,R.mipmap.ic_launcher))
+                .setContentIntent(pendingIntent)
+        }
+
+        notificationManager.notify(123, builder.build())
+
+
+    }
+
+    override fun onStop() {
+        super.onStop()
+        showNotification()
     }
 }
